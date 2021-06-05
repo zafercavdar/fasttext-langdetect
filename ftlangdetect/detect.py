@@ -1,21 +1,35 @@
+import os
 from typing import Dict, Union
 
 import fasttext
+import wget
 
 models = {"low_mem": None, "high_mem": None}
+
+
+def download_model(name):
+    url = f"https://dl.fbaipublicfiles.com/fasttext/supervised-models/{name}"
+    target_folder = "/tmp/fasttext-langdetect"
+    target_path = os.path.join(target_folder, name)
+    if not os.path.exists(target_path):
+        os.makedirs(target_folder, exist_ok=True)
+        wget.download(url=url, out=target_path)
+    return target_path
 
 
 def get_or_load_model(low_memory=False):
     if low_memory:
         model = models.get("low_mem", None)
         if not model:
-            model = fasttext.load_model("ftlangdetect/models/lid.176.ftz")
+            model_path = download_model("lid.176.ftz")
+            model = fasttext.load_model(model_path)
             models["low_mem"] = model
         return model
     else:
         model = models.get("high_mem", None)
         if not model:
-            model = fasttext.load_model("ftlangdetect/models/lid.176.bin")
+            model_path = download_model("lid.176.bin")
+            model = fasttext.load_model(model_path)
             models["high_mem"] = model
         return model
 

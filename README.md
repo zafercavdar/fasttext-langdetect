@@ -13,12 +13,18 @@ pip install fasttext-langdetect
 ```
 
 ## Usage
+`detect` method expects UTF-8 data. `low_memory` option enables getting predictions with the compressed version of the fasttext model by sacrificing the accuracy a bit.
+
 ```
 from ftlangdetect import detect
 
-result = detect("Bugün hava çok güzel")
+result = detect(text="Bugün hava çok güzel", low_memory=False)
 print(result)
 > {'lang': 'tr', 'score': 1.00}
+
+result = detect(text="Bugün hava çok güzel", low_memory=True)
+print(result)
+> {'lang': 'tr', 'score': 0.9982126951217651}
 ```
 
 ## References

@@ -6,7 +6,7 @@ from ftlangdetect import detect
 class TestDetect(TestCase):
 
     def test_detect_base(self):
-        result = detect("")
+        result = detect("Bugün hava çok güzel")
         assert "lang" in result
         assert "score" in result
         assert isinstance(result["lang"], str)

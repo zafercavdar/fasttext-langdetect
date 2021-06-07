@@ -7,6 +7,21 @@ This library is a wrapper for the language detection model trained on fasttext b
 af als am an ar arz as ast av az azb ba bar bcl be bg bh bn bo bpy br bs bxr ca cbk ce cebckb co cs cv cy da de diq dsb dty dv el eml en eo es et eu fa fi fr frr fy ga gd gl gn gom gu gv he hi hif hr hsb ht hu hy ia id ie ilo io is it ja jbo jv ka kk km kn ko krc ku kv kw ky la lb lez li lmo lo lrc lt lv mai mg mhr min mk ml mn mr mrj ms mt mwl my myv mzn nah nap nds ne new nl nn no oc or os pa pam pfl pl pms pnb ps pt qu rm ro ru rue sa sah sc scn sco sd sh si sk sl so sq sr su sv sw ta te tg th tk tl tr tt tyv ug uk ur uz vec vep vi vls vo wa war wuu xal xmf yi yo yue zh
 ```
 
+## Benchmark
+We benchmarked the fasttext model against [cld2](https://github.com/CLD2Owners/cld2), [langid](https://github.com/saffsd/langid.py), and [langdetect](https://github.com/Mimino666/langdetect) on Wili-2018 dataset.
+
+|                          | fasttext    | langid      | langdetect  | cld2        |
+|--------------------------|-------------|-------------|-------------|-------------|
+| Average time (ms) | 0,158273381 | 1,726618705 | 12,44604317 | **0,028776978** |
+| 139 langs - not weighted   | 76,8        | 61,6        | 37,6        | **80,8**        |
+| 139 langs - pop weighted | **95,5**        | 93,1        | 86,6        | 92,7        |
+| 44 langs - not weighted    | **93,3**        | 89,2        | 81,6        | 91,5        |
+| 44 langs - pop weighted   | **96,6**        | 94,8        | 89,4        | 93,4        |
+
+- `pop weighted` means recall for each language is multipled by [its number of speakers](https://en.wikipedia.org/wiki/List_of_languages_by_total_number_of_speakers).
+- 139 languages = all languages with ISO 639-1 2-letter code
+- 44 languages = top 44 languages spoken in the world
+
 ## Install
 ```
 pip install fasttext-langdetect

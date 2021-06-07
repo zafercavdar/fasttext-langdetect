@@ -3,7 +3,7 @@ from setuptools import find_packages
 
 setup(name='fasttext-langdetect',
       version='1.0.2',
-      description='Language identification with fasttext',
+      description='80x faster and 95% accurate language identification with Fasttext',
       keywords=['fasttext', 'langdetect', 'language detection',
                 'language identification'],
       long_description=open("README.md", "r", encoding='utf-8').read(),

@@ -7,6 +7,26 @@ This library is a wrapper for the language detection model trained on fasttext b
 af als am an ar arz as ast av az azb ba bar bcl be bg bh bn bo bpy br bs bxr ca cbk ce cebckb co cs cv cy da de diq dsb dty dv el eml en eo es et eu fa fi fr frr fy ga gd gl gn gom gu gv he hi hif hr hsb ht hu hy ia id ie ilo io is it ja jbo jv ka kk km kn ko krc ku kv kw ky la lb lez li lmo lo lrc lt lv mai mg mhr min mk ml mn mr mrj ms mt mwl my myv mzn nah nap nds ne new nl nn no oc or os pa pam pfl pl pms pnb ps pt qu rm ro ru rue sa sah sc scn sco sd sh si sk sl so sq sr su sv sw ta te tg th tk tl tr tt tyv ug uk ur uz vec vep vi vls vo wa war wuu xal xmf yi yo yue zh
 ```
 
+## Install
+```
+pip install fasttext-langdetect
+```
+
+## Usage
+`detect` method expects UTF-8 data. `low_memory` option enables getting predictions with the compressed version of the fasttext model by sacrificing the accuracy a bit.
+
+```
+from ftlangdetect import detect
+
+result = detect(text="Bugün hava çok güzel", low_memory=False)
+print(result)
+> {'lang': 'tr', 'score': 1.00}
+
+result = detect(text="Bugün hava çok güzel", low_memory=True)
+print(result)
+> {'lang': 'tr', 'score': 0.9982126951217651}
+```
+
 ## Benchmark
 We benchmarked the fasttext model against [cld2](https://github.com/CLD2Owners/cld2), [langid](https://github.com/saffsd/langid.py), and [langdetect](https://github.com/Mimino666/langdetect) on Wili-2018 dataset.
 
@@ -166,25 +186,6 @@ We benchmarked the fasttext model against [cld2](https://github.com/CLD2Owners/c
 | Yiddish                 | 0,956 | 0,958    | 0          | 0      |
 | Yoruba                  | 0,75  | 0,262    | 0          | 0      |
 
-## Install
-```
-pip install fasttext-langdetect
-```
-
-## Usage
-`detect` method expects UTF-8 data. `low_memory` option enables getting predictions with the compressed version of the fasttext model by sacrificing the accuracy a bit.
-
-```
-from ftlangdetect import detect
-
-result = detect(text="Bugün hava çok güzel", low_memory=False)
-print(result)
-> {'lang': 'tr', 'score': 1.00}
-
-result = detect(text="Bugün hava çok güzel", low_memory=True)
-print(result)
-> {'lang': 'tr', 'score': 0.9982126951217651}
-```
 
 ## References
 [1] A. Joulin, E. Grave, P. Bojanowski, T. Mikolov, [Bag of Tricks for Efficient Text Classification](https://arxiv.org/abs/1607.01759)

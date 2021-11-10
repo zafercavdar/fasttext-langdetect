@@ -1,1 +1,2 @@
 fasttext >= 0.9.1
+wget==3.2

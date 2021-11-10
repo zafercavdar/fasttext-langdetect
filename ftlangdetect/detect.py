@@ -5,14 +5,14 @@ import fasttext
 import wget
 
 models = {"low_mem": None, "high_mem": None}
+FTLANG_CACHE = os.getenv("FTLANG_CACHE", "/tmp/fasttext-langdetect")
 
 
 def download_model(name):
     url = f"https://dl.fbaipublicfiles.com/fasttext/supervised-models/{name}"
-    target_folder = "/tmp/fasttext-langdetect"
-    target_path = os.path.join(target_folder, name)
+    target_path = os.path.join(FTLANG_CACHE, name)
     if not os.path.exists(target_path):
-        os.makedirs(target_folder, exist_ok=True)
+        os.makedirs(FTLANG_CACHE, exist_ok=True)
         wget.download(url=url, out=target_path)
     return target_path
 

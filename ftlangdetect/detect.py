@@ -1,19 +1,23 @@
 import os
+import fasttext
+import requests
 from typing import Dict, Union
 
-import fasttext
-import wget
+# mute warning until 0.9.3 gets released
+# https://github.com/facebookresearch/fastText/issues/1067
+fasttext.FastText.eprint = lambda x: None
 
 models = {"low_mem": None, "high_mem": None}
 FTLANG_CACHE = os.getenv("FTLANG_CACHE", "/tmp/fasttext-langdetect")
 
 
 def download_model(name):
-    url = f"https://dl.fbaipublicfiles.com/fasttext/supervised-models/{name}"
     target_path = os.path.join(FTLANG_CACHE, name)
     if not os.path.exists(target_path):
+        url = f"https://dl.fbaipublicfiles.com/fasttext/supervised-models/{name}"
         os.makedirs(FTLANG_CACHE, exist_ok=True)
-        wget.download(url=url, out=target_path)
+        resp = requests.get(url)
+        open(target_path, "wb").write(resp.content)
     return target_path
 
 

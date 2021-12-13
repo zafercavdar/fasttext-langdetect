@@ -3,6 +3,10 @@ import fasttext
 import requests
 from typing import Dict, Union
 
+# mute warning until 0.9.3 gets released
+# https://github.com/facebookresearch/fastText/issues/1067
+fasttext.FastText.eprint = lambda x: None
+
 models = {"low_mem": None, "high_mem": None}
 FTLANG_CACHE = os.getenv("FTLANG_CACHE", "/tmp/fasttext-langdetect")
 

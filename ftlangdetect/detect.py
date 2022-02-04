@@ -5,7 +5,7 @@ import fasttext
 import wget
 
 models = {"low_mem": None, "high_mem": None}
-FTLANG_CACHE = os.getenv("FTLANG_CACHE", "/tmp/fasttext-langdetect")
+FTLANG_CACHE = os.getenv("FTLANG_CACHE", os.path.dirname(__file__))
 
 
 def download_model(name):

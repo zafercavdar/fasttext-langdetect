@@ -12,7 +12,10 @@ setup(name='fasttext-langdetect',
       download_url='https://github.com/zafercavdar/fasttext-langdetect/archive/refs/tags/v1.0.3.tar.gz',
       author='Zafer Cavdar',
       author_email='zafercavdar@yahoo.com',
-      install_requires=['fasttext >= 0.9.1'],
+      install_requires=[
+        req.strip()
+        for req in open("requirements.txt", "r").readlines()
+      ],
       license='MIT',
       packages=find_packages(),
       classifiers=[

@@ -2,18 +2,20 @@ import os
 from typing import Dict, Union
 
 import fasttext
-import wget
+import requests
 
 models = {"low_mem": None, "high_mem": None}
 FTLANG_CACHE = os.getenv("FTLANG_CACHE", "/tmp/fasttext-langdetect")
 
 
-def download_model(name):
-    url = f"https://dl.fbaipublicfiles.com/fasttext/supervised-models/{name}"
+def download_model(name: str) -> str:
     target_path = os.path.join(FTLANG_CACHE, name)
     if not os.path.exists(target_path):
+        url = f"https://dl.fbaipublicfiles.com/fasttext/supervised-models/{name}"  # noqa
         os.makedirs(FTLANG_CACHE, exist_ok=True)
-        wget.download(url=url, out=target_path)
+        with open(target_path, "wb") as fp:
+            response = requests.get(url)
+            fp.write(response.content)
     return target_path
 
 

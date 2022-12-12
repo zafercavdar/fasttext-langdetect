@@ -2,14 +2,14 @@ from setuptools import setup
 from setuptools import find_packages
 
 setup(name='fasttext-langdetect',
-      version='1.0.3',
+      version='1.0.4',
       description='80x faster and 95% accurate language identification with Fasttext',
       keywords=['fasttext', 'langdetect', 'language detection',
                 'language identification'],
       long_description=open("README.md", "r", encoding='utf-8').read(),
       long_description_content_type="text/markdown",
       url='https://github.com/zafercavdar/fasttext-langdetect.git',
-      download_url='https://github.com/zafercavdar/fasttext-langdetect/archive/refs/tags/v1.0.3.tar.gz',
+      download_url='https://github.com/zafercavdar/fasttext-langdetect/archive/refs/tags/v1.0.4.tar.gz',
       author='Zafer Cavdar',
       author_email='zafercavdar@yahoo.com',
       install_requires=[

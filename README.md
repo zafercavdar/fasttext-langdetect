@@ -186,6 +186,9 @@ We benchmarked the fasttext model against [cld2](https://github.com/CLD2Owners/c
 | Yiddish                 | 0,956 | 0,958    | 0          | 0      |
 | Yoruba                  | 0,75  | 0,262    | 0          | 0      |
 
+## Star History
+
+[![Star History Chart](https://api.star-history.com/svg?repos=zafercavdar/fasttext-langdetect&type=Date)](https://star-history.com/#zafercavdar/fasttext-langdetect&Date)
 
 ## References
 [1] A. Joulin, E. Grave, P. Bojanowski, T. Mikolov, [Bag of Tricks for Efficient Text Classification](https://arxiv.org/abs/1607.01759)

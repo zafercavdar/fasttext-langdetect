@@ -13,7 +13,7 @@ setup(name='fasttext-langdetect',
       author='Zafer Cavdar',
       author_email='zafercavdar@yahoo.com',
       install_requires=[
-          "fasttext>=0.9.1",
+          "fasttext-wheel>=0.9.1",
           "requests>=2.22.0",
       ],
       license='MIT',

@@ -9,7 +9,6 @@ setup(name='fasttext-langdetect',
       long_description=open("README.md", "r", encoding='utf-8').read(),
       long_description_content_type="text/markdown",
       url='https://github.com/zafercavdar/fasttext-langdetect.git',
-      download_url='https://github.com/zafercavdar/fasttext-langdetect/archive/refs/tags/v1.0.5.tar.gz',
       author='Zafer Cavdar',
       author_email='zafercavdar@yahoo.com',
       install_requires=[

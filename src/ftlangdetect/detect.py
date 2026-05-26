@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import contextlib
+import io
 import logging
 import os
 import tempfile
@@ -85,6 +87,18 @@ def download_model(name: str, cache_dir: Path | None = None) -> Path:
     return target_path
 
 
+def _load_fasttext_model_quietly(model_path: Path) -> _FastText:
+    """Load a fastText model, silencing its noisy ``load_model`` warning.
+
+    Upstream fastText prints a hard-coded message to stderr on every
+    ``load_model`` call (see issue #11). The function is otherwise
+    silent, so suppressing stderr for the duration of this single call
+    is safe: real failures surface as exceptions, not stderr text.
+    """
+    with contextlib.redirect_stderr(io.StringIO()):
+        return fasttext.load_model(str(model_path))
+
+
 def get_or_load_model(low_memory: bool = False) -> _FastText:
     """Return the cached fastText model, loading it from disk on first use.
 
@@ -118,7 +132,7 @@ def get_or_load_model(low_memory: bool = False) -> _FastText:
         model_name = _LOW_MEM_MODEL if low_memory else _HIGH_MEM_MODEL
         model_path = download_model(model_name)
         try:
-            model = fasttext.load_model(str(model_path))
+            model = _load_fasttext_model_quietly(model_path)
         except ValueError as exc:
             logger.warning(
                 "Cached fastText model at %s failed to load (%s); "
@@ -128,7 +142,7 @@ def get_or_load_model(low_memory: bool = False) -> _FastText:
             )
             model_path.unlink(missing_ok=True)
             model_path = download_model(model_name)
-            model = fasttext.load_model(str(model_path))
+            model = _load_fasttext_model_quietly(model_path)
 
         _models[key] = model
         return model

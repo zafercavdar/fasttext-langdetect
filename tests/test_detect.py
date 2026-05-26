@@ -6,9 +6,13 @@ These tests download the fastText model on first run (cached under
 
 from __future__ import annotations
 
+import importlib
+
 import pytest
 
 from ftlangdetect import DetectionResult, detect
+
+detect_module = importlib.import_module("ftlangdetect.detect")
 
 
 @pytest.mark.parametrize(
@@ -93,3 +97,23 @@ def test_detect_multilingual_top_two_contains_expected_languages() -> None:
     detected_langs = {item["lang"] for item in results}
     assert "en" in detected_langs
     assert "fr" in detected_langs
+
+
+def test_detect_does_not_emit_fasttext_load_model_warning(
+    capfd: pytest.CaptureFixture[str],
+) -> None:
+    """Regression test for issue #11.
+
+    Upstream fasttext.load_model() unconditionally prints a deprecation-style
+    warning to stderr on every call. We suppress it inside the wrapper so
+    users don't see noise on first use.
+    """
+    detect_module._models.pop("low_mem", None)
+    try:
+        detect("hello world", low_memory=True)
+    finally:
+        captured = capfd.readouterr()
+
+    assert "load_model" not in captured.err, (
+        f"fastText's load_model warning leaked to stderr: {captured.err!r}"
+    )

@@ -1,31 +1,128 @@
 # fasttext-langdetect
-This library is a wrapper for the language detection model trained on fasttext by Facebook. For more information, please visit: https://fasttext.cc/docs/en/language-identification.html
+[![PyPI version](https://img.shields.io/pypi/v/fasttext-langdetect.svg)](https://pypi.org/project/fasttext-langdetect/)
+[![Python versions](https://img.shields.io/pypi/pyversions/fasttext-langdetect.svg)](https://pypi.org/project/fasttext-langdetect/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 
+`fasttext-langdetect` is a thin Python wrapper around Facebook's pretrained
+[`lid.176`](https://fasttext.cc/docs/en/language-identification.html) fastText
+language identification models.
 
 ## Supported languages
+
 ```
 af als am an ar arz as ast av az azb ba bar bcl be bg bh bn bo bpy br bs bxr ca cbk ce cebckb co cs cv cy da de diq dsb dty dv el eml en eo es et eu fa fi fr frr fy ga gd gl gn gom gu gv he hi hif hr hsb ht hu hy ia id ie ilo io is it ja jbo jv ka kk km kn ko krc ku kv kw ky la lb lez li lmo lo lrc lt lv mai mg mhr min mk ml mn mr mrj ms mt mwl my myv mzn nah nap nds ne new nl nn no oc or os pa pam pfl pl pms pnb ps pt qu rm ro ru rue sa sah sc scn sco sd sh si sk sl so sq sr su sv sw ta te tg th tk tl tr tt tyv ug uk ur uz vec vep vi vls vo wa war wuu xal xmf yi yo yue zh
 ```
 
 ## Install
-```
+
+```bash
 pip install fasttext-langdetect
 ```
 
-## Usage
-`detect` method expects UTF-8 data. `low_memory` option enables getting predictions with the compressed version of the fasttext model by sacrificing the accuracy a bit.
+Requires Python 3.9 or newer. Works out of the box on **Linux, macOS,
+and Windows** for Python 3.9 – 3.13 (including free-threaded 3.13t) —
+no C++ toolchain required, because we depend on
+[`fasttext-predict`](https://pypi.org/project/fasttext-predict/), a
+minimal prediction-only fork of fastText that ships prebuilt wheels for
+all major platforms and has no NumPy dependency.
 
-```
+> **Already have `fasttext` or `fasttext-wheel` installed?** All three
+> packages provide the same `import fasttext` module and share install
+> paths. If you previously installed the source-only `fasttext` package
+> and want a clean upgrade, run `pip uninstall fasttext fasttext-wheel`
+> first, then reinstall `fasttext-langdetect`.
+
+## Usage
+
+`detect` accepts any UTF-8 string. Embedded newlines, tabs, and other
+whitespace are normalized internally — paragraphs and multi-line inputs
+work without preprocessing. Pass `low_memory=True` to use the compressed
+`lid.176.ftz` model, which trades a small accuracy hit for a much smaller
+memory footprint.
+
+```python
 from ftlangdetect import detect
 
 result = detect(text="Bugün hava çok güzel", low_memory=False)
 print(result)
-> {'lang': 'tr', 'score': 1.00}
+# {'lang': 'tr', 'score': 1.0}
 
 result = detect(text="Bugün hava çok güzel", low_memory=True)
 print(result)
-> {'lang': 'tr', 'score': 0.9982126951217651}
+# {'lang': 'tr', 'score': 0.9982126951217651}
+
+# Multi-line input is fine — whitespace is normalized internally
+result = detect(text="The quick brown fox\njumps over the lazy dog")
+print(result)
+# {'lang': 'en', 'score': 0.97...}
 ```
+
+Only completely empty or whitespace-only input raises `ValueError` (since
+there's nothing to detect).
+
+### Detecting multiple languages (bilingual / code-switched text)
+
+Pass `k=N` (where `N > 1`) to get the top-N candidate languages, sorted by
+descending score. This is useful for bilingual sentences, mixed-language
+paragraphs, or whenever you want to see runner-up predictions. The
+default (`k=1`) is unchanged and still returns a single dict.
+
+```python
+from ftlangdetect import detect
+
+text = "The quick brown fox. Le chat dort sur le canapé."
+results = detect(text=text, low_memory=False, k=3)
+print(results)
+# [
+#   {'lang': 'fr', 'score': 0.71},
+#   {'lang': 'en', 'score': 0.27},
+#   {'lang': 'de', 'score': 0.005},
+# ]
+```
+
+| `k` value | Return type            |
+| --------- | ---------------------- |
+| `1` (default) | `DetectionResult` (`{'lang': str, 'score': float}`) |
+| `> 1`     | `list[DetectionResult]`, length up to `k`, sorted by score desc |
+
+### Model cache location
+
+The model is downloaded on first use and cached on disk. By default the
+cache lives in the system temp directory under `fasttext-langdetect/`. Set
+the `FTLANG_CACHE` environment variable to override the location:
+
+```bash
+export FTLANG_CACHE=~/.cache/fasttext-langdetect
+```
+
+If a cached model fails to load (for example a corrupt file left over
+from a much older release), the library will now delete it and
+re-download it once automatically. As a manual fallback you can always
+clear the cache by hand:
+
+```bash
+rm -rf "${FTLANG_CACHE:-/tmp/fasttext-langdetect}"
+```
+
+## Development
+
+```bash
+git clone https://github.com/zafercavdar/fasttext-langdetect.git
+cd fasttext-langdetect
+python -m pip install -e ".[dev]"
+pre-commit install
+
+make check   # ruff lint + format check
+make test    # pytest
+make cov     # pytest with coverage
+make build   # build sdist + wheel
+```
+
+This project uses [ruff](https://docs.astral.sh/ruff/) for linting and
+formatting, [pytest](https://docs.pytest.org/) for tests,
+[hatchling](https://hatch.pypa.io/) as the build backend, and
+[pre-commit](https://pre-commit.com/) for git hooks.
 
 ## Benchmark
 We benchmarked the fasttext model against [cld2](https://github.com/CLD2Owners/cld2), [langid](https://github.com/saffsd/langid.py), and [langdetect](https://github.com/Mimino666/langdetect) on Wili-2018 dataset.

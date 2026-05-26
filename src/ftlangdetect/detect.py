@@ -88,12 +88,22 @@ def download_model(name: str, cache_dir: Path | None = None) -> Path:
 def get_or_load_model(low_memory: bool = False) -> _FastText:
     """Return the cached fastText model, loading it from disk on first use.
 
+    If the cached file fails to load (for example because an older version
+    of this package wrote a partial or 4xx/5xx HTML response to disk under
+    the model filename — see issue #15) the corrupt file is removed and a
+    fresh copy is downloaded automatically, then loaded once more.
+
     Args:
         low_memory: If ``True``, use the compressed ``lid.176.ftz`` model
             (slightly lower accuracy, much smaller memory footprint).
 
     Returns:
         The loaded fastText model instance.
+
+    Raises:
+        ValueError: If a freshly downloaded model still fails to load,
+            which usually indicates a problem upstream rather than in
+            the local cache.
     """
     key = "low_mem" if low_memory else "high_mem"
     model = _models.get(key)
@@ -107,7 +117,19 @@ def get_or_load_model(low_memory: bool = False) -> _FastText:
 
         model_name = _LOW_MEM_MODEL if low_memory else _HIGH_MEM_MODEL
         model_path = download_model(model_name)
-        model = fasttext.load_model(str(model_path))
+        try:
+            model = fasttext.load_model(str(model_path))
+        except ValueError as exc:
+            logger.warning(
+                "Cached fastText model at %s failed to load (%s); "
+                "removing it and re-downloading once.",
+                model_path,
+                exc,
+            )
+            model_path.unlink(missing_ok=True)
+            model_path = download_model(model_name)
+            model = fasttext.load_model(str(model_path))
+
         _models[key] = model
         return model
 

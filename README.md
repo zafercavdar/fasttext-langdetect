@@ -85,6 +85,15 @@ the `FTLANG_CACHE` environment variable to override the location:
 export FTLANG_CACHE=~/.cache/fasttext-langdetect
 ```
 
+If a cached model fails to load (for example a corrupt file left over
+from a much older release), the library will now delete it and
+re-download it once automatically. As a manual fallback you can always
+clear the cache by hand:
+
+```bash
+rm -rf "${FTLANG_CACHE:-/tmp/fasttext-langdetect}"
+```
+
 ## Development
 
 ```bash

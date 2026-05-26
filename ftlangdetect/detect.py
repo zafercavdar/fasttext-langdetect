@@ -14,7 +14,9 @@ def download_model(name: str) -> str:
     target_path = os.path.join(FTLANG_CACHE, name)
     if not os.path.exists(target_path):
         logger.info(f"Downloading {name} model ...")
-        url = f"https://dl.fbaipublicfiles.com/fasttext/supervised-models/{name}"  # noqa
+        url = (
+            f"https://dl.fbaipublicfiles.com/fasttext/supervised-models/{name}"  # noqa
+        )
         os.makedirs(FTLANG_CACHE, exist_ok=True)
         with open(target_path, "wb") as fp:
             response = requests.get(url)
@@ -43,7 +45,7 @@ def get_or_load_model(low_memory=False):
 def detect(text: str, low_memory=False) -> Dict[str, Union[str, float]]:
     model = get_or_load_model(low_memory)
     labels, scores = model.predict(text)
-    label = labels[0].replace("__label__", '')
+    label = labels[0].replace("__label__", "")
     score = min(float(scores[0]), 1.0)
     return {
         "lang": label,

@@ -128,4 +128,20 @@ dmypy.json
 # Pyre type checker
 .pyre/
 
+# Ruff
+.ruff_cache/
+
+# uv
+.uv/
+uv.lock
+
+# IDEs
+.idea/
+.vscode/
+
+# macOS
 .DS_Store
+
+# Project artifacts
+*.bin
+*.ftz

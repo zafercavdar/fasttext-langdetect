@@ -20,7 +20,16 @@ af als am an ar arz as ast av az azb ba bar bcl be bg bh bn bo bpy br bs bxr ca 
 pip install fasttext-langdetect
 ```
 
-Requires Python 3.9 or newer.
+Requires Python 3.9 or newer. Works out of the box on **Linux, macOS,
+and Windows** — no C++ toolchain required, because we depend on
+[`fasttext-wheel`](https://pypi.org/project/fasttext-wheel/) which ships
+prebuilt binaries.
+
+> **Already have `fasttext` installed?** `fasttext-wheel` provides the
+> same `import fasttext` module; the two packages occupy the same import
+> namespace. If you previously installed the source-only `fasttext`
+> package and want to make sure you're using the prebuilt wheels, run
+> `pip uninstall fasttext` first, then reinstall `fasttext-langdetect`.
 
 ## Usage
 

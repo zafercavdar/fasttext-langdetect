@@ -38,7 +38,12 @@ classifiers = [
     "Typing :: Typed",
 ]
 dependencies = [
-    "fasttext>=0.9.1",
+    # fasttext-wheel ships prebuilt binaries for Linux/macOS/Windows, so users
+    # no longer need a C++ toolchain to `pip install fasttext-langdetect`.
+    # It exposes the same `import fasttext` namespace as the upstream package,
+    # so the code below is identical regardless of which is installed.
+    # See https://github.com/zafercavdar/fasttext-langdetect/issues/14.
+    "fasttext-wheel>=0.9.2",
     "requests>=2.28.0",
 ]
 

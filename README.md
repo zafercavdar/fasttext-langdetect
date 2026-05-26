@@ -41,6 +41,31 @@ print(result)
 # {'lang': 'tr', 'score': 0.9982126951217651}
 ```
 
+### Detecting multiple languages (bilingual / code-switched text)
+
+Pass `k=N` (where `N > 1`) to get the top-N candidate languages, sorted by
+descending score. This is useful for bilingual sentences, mixed-language
+paragraphs, or whenever you want to see runner-up predictions. The
+default (`k=1`) is unchanged and still returns a single dict.
+
+```python
+from ftlangdetect import detect
+
+text = "The quick brown fox. Le chat dort sur le canapé."
+results = detect(text=text, low_memory=False, k=3)
+print(results)
+# [
+#   {'lang': 'fr', 'score': 0.71},
+#   {'lang': 'en', 'score': 0.27},
+#   {'lang': 'de', 'score': 0.005},
+# ]
+```
+
+| `k` value | Return type            |
+| --------- | ---------------------- |
+| `1` (default) | `DetectionResult` (`{'lang': str, 'score': float}`) |
+| `> 1`     | `list[DetectionResult]`, length up to `k`, sorted by score desc |
+
 ### Model cache location
 
 The model is downloaded on first use and cached on disk. By default the

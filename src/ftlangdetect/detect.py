@@ -7,7 +7,7 @@ import os
 import tempfile
 import threading
 from pathlib import Path
-from typing import TYPE_CHECKING, TypedDict
+from typing import TYPE_CHECKING, Literal, TypedDict, overload
 
 import fasttext
 import requests
@@ -112,24 +112,43 @@ def get_or_load_model(low_memory: bool = False) -> _FastText:
         return model
 
 
-def detect(text: str, low_memory: bool = False) -> DetectionResult:
+@overload
+def detect(text: str, low_memory: bool = ..., k: Literal[1] = ...) -> DetectionResult: ...
+@overload
+def detect(text: str, low_memory: bool = ..., *, k: int) -> list[DetectionResult]: ...
+def detect(
+    text: str,
+    low_memory: bool = False,
+    k: int = 1,
+) -> DetectionResult | list[DetectionResult]:
     """Detect the language of ``text`` using fastText's ``lid.176`` model.
 
     Args:
         text: Input text. Must be a single line (no embedded newlines)
             and UTF-8 decodable.
         low_memory: If ``True``, use the compressed model.
+        k: Number of language candidates to return. When ``k == 1``
+            (the default), a single :class:`DetectionResult` is returned,
+            preserving backward compatibility. When ``k > 1``, a list of
+            up to ``k`` :class:`DetectionResult` items is returned, sorted
+            by ``score`` in descending order. Useful for bilingual or
+            code-switched text.
 
     Returns:
-        A :class:`DetectionResult` with ISO 639-1 ``lang`` code and a
-        confidence ``score`` in ``[0.0, 1.0]``.
+        A :class:`DetectionResult` when ``k == 1``, or a list of
+        :class:`DetectionResult` (length up to ``k``, sorted by descending
+        score) when ``k > 1``.
 
     Raises:
         ValueError: If ``text`` contains newline characters, which fastText
-            does not accept in :py:meth:`fasttext.FastText._FastText.predict`.
+            does not accept in :py:meth:`fasttext.FastText._FastText.predict`,
+            or if ``k < 1``.
     """
     if "\n" in text:
         msg = "detect() does not support newline characters in text; split into lines first."
+        raise ValueError(msg)
+    if k < 1:
+        msg = f"k must be >= 1, got {k}"
         raise ValueError(msg)
 
     model = get_or_load_model(low_memory)
@@ -137,13 +156,19 @@ def detect(text: str, low_memory: bool = False) -> DetectionResult:
     # Call the pybind11 layer directly to avoid fasttext 0.9.x's call to
     # ``np.array(probs, copy=False)``, which raises under NumPy >= 2.0.
     # See https://github.com/zafercavdar/fasttext-langdetect/issues/17.
-    predictions = model.f.predict(text + "\n", 1, 0.0, "strict")
+    predictions = model.f.predict(text + "\n", k, 0.0, "strict")
     if not predictions:
         msg = "fastText returned no prediction for the given text."
         raise RuntimeError(msg)
 
-    probability, label = predictions[0]
-    return DetectionResult(
-        lang=label.replace("__label__", ""),
-        score=min(float(probability), 1.0),
-    )
+    results: list[DetectionResult] = [
+        DetectionResult(
+            lang=label.replace("__label__", ""),
+            score=min(float(probability), 1.0),
+        )
+        for probability, label in predictions
+    ]
+
+    if k == 1:
+        return results[0]
+    return results

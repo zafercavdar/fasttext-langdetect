@@ -6,6 +6,7 @@ import contextlib
 import io
 import logging
 import os
+import re
 import tempfile
 import threading
 from pathlib import Path
@@ -26,6 +27,21 @@ _LOW_MEM_MODEL = "lid.176.ftz"
 _HIGH_MEM_MODEL = "lid.176.bin"
 _DOWNLOAD_TIMEOUT_S = 60
 _DOWNLOAD_CHUNK_SIZE = 1024 * 1024  # 1 MiB
+_WHITESPACE_RE = re.compile(r"\s+")
+
+
+def _normalize_text_for_predict(text: str) -> str:
+    """Collapse runs of whitespace into single spaces and strip.
+
+    fastText's ``predict`` treats newline as a record separator and
+    rejects strings containing one. Normalizing whitespace lets callers
+    pass arbitrary text (paragraphs, multi-line input, tab-separated
+    snippets, etc.) without having to preprocess it themselves. fastText
+    is bag-of-tokens for language ID, so collapsing whitespace does not
+    affect the predicted language.
+    """
+    return _WHITESPACE_RE.sub(" ", text).strip()
+
 
 _models: dict[str, _FastText] = {}
 _model_lock = threading.Lock()
@@ -159,9 +175,15 @@ def detect(
 ) -> DetectionResult | list[DetectionResult]:
     """Detect the language of ``text`` using fastText's ``lid.176`` model.
 
+    The input may contain any whitespace — newlines, carriage returns,
+    tabs, runs of spaces — they are collapsed to single spaces before
+    being passed to fastText, which itself treats newlines as record
+    separators and would otherwise reject them.
+
     Args:
-        text: Input text. Must be a single line (no embedded newlines)
-            and UTF-8 decodable.
+        text: Input text in any Unicode encoding Python supports. May
+            contain newlines, tabs, or other whitespace; they are
+            normalized internally.
         low_memory: If ``True``, use the compressed model.
         k: Number of language candidates to return. When ``k == 1``
             (the default), a single :class:`DetectionResult` is returned,
@@ -176,15 +198,16 @@ def detect(
         score) when ``k > 1``.
 
     Raises:
-        ValueError: If ``text`` contains newline characters, which fastText
-            does not accept in :py:meth:`fasttext.FastText._FastText.predict`,
-            or if ``k < 1``.
+        ValueError: If ``k < 1`` or if ``text`` is empty after whitespace
+            normalization (there is nothing to detect a language from).
     """
-    if "\n" in text:
-        msg = "detect() does not support newline characters in text; split into lines first."
-        raise ValueError(msg)
     if k < 1:
         msg = f"k must be >= 1, got {k}"
+        raise ValueError(msg)
+
+    normalized = _normalize_text_for_predict(text)
+    if not normalized:
+        msg = "text is empty or whitespace-only; cannot detect a language"
         raise ValueError(msg)
 
     model = get_or_load_model(low_memory)
@@ -192,7 +215,7 @@ def detect(
     # Call the pybind11 layer directly to avoid fasttext 0.9.x's call to
     # ``np.array(probs, copy=False)``, which raises under NumPy >= 2.0.
     # See https://github.com/zafercavdar/fasttext-langdetect/issues/17.
-    predictions = model.f.predict(text + "\n", k, 0.0, "strict")
+    predictions = model.f.predict(normalized + "\n", k, 0.0, "strict")
     if not predictions:
         msg = "fastText returned no prediction for the given text."
         raise RuntimeError(msg)

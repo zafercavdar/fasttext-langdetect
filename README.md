@@ -35,8 +35,9 @@ all major platforms and has no NumPy dependency.
 
 ## Usage
 
-`detect` expects a UTF-8 string **without newlines** (fastText's `predict`
-does not accept them). Pass `low_memory=True` to use the compressed
+`detect` accepts any UTF-8 string. Embedded newlines, tabs, and other
+whitespace are normalized internally — paragraphs and multi-line inputs
+work without preprocessing. Pass `low_memory=True` to use the compressed
 `lid.176.ftz` model, which trades a small accuracy hit for a much smaller
 memory footprint.
 
@@ -50,7 +51,15 @@ print(result)
 result = detect(text="Bugün hava çok güzel", low_memory=True)
 print(result)
 # {'lang': 'tr', 'score': 0.9982126951217651}
+
+# Multi-line input is fine — whitespace is normalized internally
+result = detect(text="The quick brown fox\njumps over the lazy dog")
+print(result)
+# {'lang': 'en', 'score': 0.97...}
 ```
+
+Only completely empty or whitespace-only input raises `ValueError` (since
+there's nothing to detect).
 
 ### Detecting multiple languages (bilingual / code-switched text)
 

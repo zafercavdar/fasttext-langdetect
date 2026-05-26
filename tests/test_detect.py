@@ -42,9 +42,40 @@ def test_detect_result_is_typed_dict_compatible() -> None:
     assert result["lang"] == "en"
 
 
-def test_detect_rejects_newlines() -> None:
-    with pytest.raises(ValueError, match="newline"):
-        detect("line one\nline two", low_memory=True)
+@pytest.mark.parametrize(
+    "text",
+    [
+        "line one\nline two",
+        "line one\r\nline two",
+        "first paragraph\n\nsecond paragraph",
+        "col1\tcol2\tcol3",
+        "  leading and trailing spaces  ",
+        "many\u00a0\u00a0non\u00a0breaking\u00a0spaces",
+        "mixed\n\twhitespace \r\n everywhere",
+    ],
+)
+def test_detect_handles_arbitrary_whitespace(text: str) -> None:
+    """detect() normalizes any whitespace (newlines, tabs, NBSP, ...) to spaces."""
+    result = detect(text, low_memory=True)
+    assert isinstance(result, dict)
+    assert isinstance(result["lang"], str)
+    assert 0.0 <= result["score"] <= 1.0
+
+
+def test_detect_multiline_matches_single_line() -> None:
+    """The same content split across lines should predict the same language."""
+    single = detect("The quick brown fox jumps over the lazy dog", low_memory=False)
+    multi = detect(
+        "The quick brown fox\njumps over the lazy dog",
+        low_memory=False,
+    )
+    assert single["lang"] == multi["lang"] == "en"
+
+
+@pytest.mark.parametrize("text", ["", "   ", "\n\n", "\t \r\n  "])
+def test_detect_raises_on_empty_or_whitespace_only(text: str) -> None:
+    with pytest.raises(ValueError, match=r"empty|whitespace"):
+        detect(text, low_memory=True)
 
 
 def test_detect_explicit_k_equals_1_returns_single_dict() -> None:

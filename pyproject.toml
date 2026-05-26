@@ -4,13 +4,13 @@ build-backend = "hatchling.build"
 
 [project]
 name = "fasttext-langdetect"
-version = "1.1.0"
+version = "1.1.1"
 description = "80x faster and 95% accurate language identification with fastText"
 readme = "README.md"
 requires-python = ">=3.9"
 license = { file = "LICENSE" }
 authors = [
-    { name = "Zafer Cavdar", email = "zafercavdar@yahoo.com" },
+    { name = "Zafer Cavdar", email = "zafercvdr@gmail.com" },
 ]
 keywords = [
     "fasttext",

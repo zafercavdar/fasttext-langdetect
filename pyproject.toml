@@ -60,7 +60,9 @@ dev = [
     "ruff>=0.6",
     "pre-commit>=3.5",
     "build>=1.0",
-    "twine>=4.0",
+    # hatchling writes Metadata-Version 2.5, which twine < 7 rejects on upload.
+    # twine 7 needs Python 3.10+; publish from 3.10 or newer.
+    "twine>=7.0; python_version >= '3.10'",
 ]
 
 [project.urls]

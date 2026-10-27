@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "fasttext-langdetect"
-version = "1.1.1"
+version = "1.2.0"
 description = "80x faster and 95% accurate language identification with fastText"
 readme = "README.md"
 requires-python = ">=3.9"
@@ -32,24 +32,24 @@ classifiers = [
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
     "Topic :: Scientific/Engineering :: Information Analysis",
     "Topic :: Text Processing :: Linguistic",
     "Typing :: Typed",
 ]
 dependencies = [
-    # fasttext-predict is a minimal, prediction-only fork of fastText that
-    # ships prebuilt wheels for Linux, macOS, and Windows on Python
-    # 3.9-3.13 (including free-threaded 3.13t) and has no NumPy
-    # dependency. It exposes the same `import fasttext` namespace, so the
-    # code below is identical regardless of which fasttext variant a user
-    # has installed. Choosing this fork:
-    #   * makes `pip install fasttext-langdetect` work out of the box on
-    #     Windows and Python 3.13 (see issue #14),
-    #   * removes the NumPy>=2 crash entirely since the predict path never
-    #     constructs ndarrays (see issue #17), and
-    #   * cuts the install size from ~3 MB to ~100 KB.
-    "fasttext-predict>=0.9.2.4",
+    # The lid.176 models are run with NumPy (see ftlangdetect.model), so
+    # fastText itself is not needed. No single NumPy release has wheels for
+    # every supported Python (3.9 tops out at 2.0.x, 3.14 starts at 2.3.2),
+    # so each floor is the first release with Linux, macOS (arm64) and
+    # Windows wheels for that Python.
+    "numpy>=1.21.0; python_version < '3.10'",
+    "numpy>=1.21.3; python_version == '3.10'",
+    "numpy>=1.23.2; python_version == '3.11'",
+    "numpy>=1.26.0; python_version == '3.12'",
+    "numpy>=2.1.0; python_version == '3.13'",
+    "numpy>=2.3.2; python_version >= '3.14'",
     "requests>=2.28.0",
 ]
 
@@ -60,7 +60,9 @@ dev = [
     "ruff>=0.6",
     "pre-commit>=3.5",
     "build>=1.0",
-    "twine>=4.0",
+    # hatchling writes Metadata-Version 2.5, which twine < 7 rejects on upload.
+    # twine 7 needs Python 3.10+; publish from 3.10 or newer.
+    "twine>=7.0; python_version >= '3.10'",
 ]
 
 [project.urls]

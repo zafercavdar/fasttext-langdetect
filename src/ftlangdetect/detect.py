@@ -2,21 +2,17 @@
 
 from __future__ import annotations
 
-import contextlib
-import io
 import logging
 import os
 import re
 import tempfile
 import threading
 from pathlib import Path
-from typing import TYPE_CHECKING, Literal, TypedDict, overload
+from typing import Literal, TypedDict, overload
 
-import fasttext
 import requests
 
-if TYPE_CHECKING:
-    from fasttext.FastText import _FastText
+from ftlangdetect.model import FastTextModel
 
 __all__ = ["DetectionResult", "detect", "get_or_load_model"]
 
@@ -33,17 +29,16 @@ _WHITESPACE_RE = re.compile(r"\s+")
 def _normalize_text_for_predict(text: str) -> str:
     """Collapse runs of whitespace into single spaces and strip.
 
-    fastText's ``predict`` treats newline as a record separator and
-    rejects strings containing one. Normalizing whitespace lets callers
-    pass arbitrary text (paragraphs, multi-line input, tab-separated
-    snippets, etc.) without having to preprocess it themselves. fastText
-    is bag-of-tokens for language ID, so collapsing whitespace does not
+    fastText treats newline as a record separator, so normalizing
+    whitespace lets callers pass arbitrary text (paragraphs, multi-line
+    input, tab-separated snippets, etc.) as a single input. fastText is
+    bag-of-tokens for language ID, so collapsing whitespace does not
     affect the predicted language.
     """
     return _WHITESPACE_RE.sub(" ", text).strip()
 
 
-_models: dict[str, _FastText] = {}
+_models: dict[str, FastTextModel] = {}
 _model_lock = threading.Lock()
 
 
@@ -103,19 +98,7 @@ def download_model(name: str, cache_dir: Path | None = None) -> Path:
     return target_path
 
 
-def _load_fasttext_model_quietly(model_path: Path) -> _FastText:
-    """Load a fastText model, silencing its noisy ``load_model`` warning.
-
-    Upstream fastText prints a hard-coded message to stderr on every
-    ``load_model`` call (see issue #11). The function is otherwise
-    silent, so suppressing stderr for the duration of this single call
-    is safe: real failures surface as exceptions, not stderr text.
-    """
-    with contextlib.redirect_stderr(io.StringIO()):
-        return fasttext.load_model(str(model_path))
-
-
-def get_or_load_model(low_memory: bool = False) -> _FastText:
+def get_or_load_model(low_memory: bool = False) -> FastTextModel:
     """Return the cached fastText model, loading it from disk on first use.
 
     If the cached file fails to load (for example because an older version
@@ -148,7 +131,7 @@ def get_or_load_model(low_memory: bool = False) -> _FastText:
         model_name = _LOW_MEM_MODEL if low_memory else _HIGH_MEM_MODEL
         model_path = download_model(model_name)
         try:
-            model = _load_fasttext_model_quietly(model_path)
+            model = FastTextModel(model_path)
         except ValueError as exc:
             logger.warning(
                 "Cached fastText model at %s failed to load (%s); "
@@ -158,7 +141,7 @@ def get_or_load_model(low_memory: bool = False) -> _FastText:
             )
             model_path.unlink(missing_ok=True)
             model_path = download_model(model_name)
-            model = _load_fasttext_model_quietly(model_path)
+            model = FastTextModel(model_path)
 
         _models[key] = model
         return model
@@ -177,8 +160,7 @@ def detect(
 
     The input may contain any whitespace — newlines, carriage returns,
     tabs, runs of spaces — they are collapsed to single spaces before
-    being passed to fastText, which itself treats newlines as record
-    separators and would otherwise reject them.
+    prediction.
 
     Args:
         text: Input text in any Unicode encoding Python supports. May
@@ -212,20 +194,17 @@ def detect(
 
     model = get_or_load_model(low_memory)
 
-    # Call the pybind11 layer directly to avoid fasttext 0.9.x's call to
-    # ``np.array(probs, copy=False)``, which raises under NumPy >= 2.0.
-    # See https://github.com/zafercavdar/fasttext-langdetect/issues/17.
-    predictions = model.f.predict(normalized + "\n", k, 0.0, "strict")
+    predictions = model.predict(normalized, k)
     if not predictions:
         msg = "fastText returned no prediction for the given text."
         raise RuntimeError(msg)
 
     results: list[DetectionResult] = [
         DetectionResult(
-            lang=label.replace("__label__", ""),
-            score=min(float(probability), 1.0),
+            lang=label,
+            score=min(probability, 1.0),
         )
-        for probability, label in predictions
+        for label, probability in predictions
     ]
 
     if k == 1:

@@ -91,7 +91,7 @@ def test_get_or_load_model_recovers_from_corrupt_cache(
     Older releases of this package wrote 4xx/5xx HTML error bodies into the
     model cache because they did not check the HTTP status. Once that file
     was on disk, every subsequent call returned the same corrupt path and
-    fasttext raised ``ValueError: ... has wrong file format!``. We now
+    loading it raised ``ValueError``. We now
     detect the load failure, delete the cached file, re-download, and try
     once more.
     """
@@ -121,7 +121,7 @@ def test_get_or_load_model_recovers_from_corrupt_cache(
         return sentinel_model
 
     monkeypatch.setattr(detect_module, "download_model", fake_download)
-    monkeypatch.setattr(detect_module.fasttext, "load_model", fake_load_model)
+    monkeypatch.setattr(detect_module, "FastTextModel", fake_load_model)
 
     try:
         result = detect_module.get_or_load_model(low_memory=True)
@@ -157,7 +157,7 @@ def test_get_or_load_model_propagates_second_failure(
         raise ValueError(msg)
 
     monkeypatch.setattr(detect_module, "download_model", fake_download)
-    monkeypatch.setattr(detect_module.fasttext, "load_model", always_fail)
+    monkeypatch.setattr(detect_module, "FastTextModel", always_fail)
 
     try:
         with pytest.raises(ValueError, match="wrong file format"):

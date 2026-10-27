@@ -21,17 +21,10 @@ pip install fasttext-langdetect
 ```
 
 Requires Python 3.9 or newer. Works out of the box on **Linux, macOS,
-and Windows** for Python 3.9 – 3.13 (including free-threaded 3.13t) —
-no C++ toolchain required, because we depend on
-[`fasttext-predict`](https://pypi.org/project/fasttext-predict/), a
-minimal prediction-only fork of fastText that ships prebuilt wheels for
-all major platforms and has no NumPy dependency.
-
-> **Already have `fasttext` or `fasttext-wheel` installed?** All three
-> packages provide the same `import fasttext` module and share install
-> paths. If you previously installed the source-only `fasttext` package
-> and want a clean upgrade, run `pip uninstall fasttext fasttext-wheel`
-> first, then reinstall `fasttext-langdetect`.
+and Windows** for Python 3.9 – 3.14 (including free-threaded builds) —
+no C++ toolchain required. The models are run with
+[NumPy](https://numpy.org/), which reproduces fastText's predictions, so
+fastText itself is not a dependency.
 
 ## Usage
 

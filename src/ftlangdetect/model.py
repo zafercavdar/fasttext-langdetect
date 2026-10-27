@@ -212,8 +212,11 @@ class FastTextModel:
         if not ids:
             return []
         hidden = self.input[ids].mean(axis=0, dtype=np.float32)
-        f = 1.0 / (1.0 + np.exp(-(self.output[: len(self.labels) - 1] @ hidden)))
-        scores = self.goes_left @ np.log(1.0 - f + 1e-5) + self.goes_right @ np.log(f + 1e-5)
+        # NumPy 2.0/2.1 on macOS arm64 (Accelerate) emits spurious floating-point
+        # warnings from matmul, and exp() may overflow to inf, which is harmless.
+        with np.errstate(all="ignore"):
+            f = 1.0 / (1.0 + np.exp(-(self.output[: len(self.labels) - 1] @ hidden)))
+            scores = self.goes_left @ np.log(1.0 - f + 1e-5) + self.goes_right @ np.log(f + 1e-5)
         best = np.argsort(-scores, kind="stable")[:k]
         return [
             (self.labels[i], float(np.exp(scores[i])))
